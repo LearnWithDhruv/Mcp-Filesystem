@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Filesystem Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .operation-box {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+    </style>
+</head>
+<body>
+    <h1>MCP Filesystem Operations</h1>
+    
+    <div class="operation-box">
+        <h2>Upload Folder</h2>
+        <input type="file" id="folderInput" webkitdirectory directory multiple>
+        <button onclick="uploadFolder()">Upload</button>
+        <div id="uploadStatus" class="status"></div>
+    </div>
+
+    <div class="operation-box">
+        <h2>Edit File</h2>
+        <input type="text" id="filenameInput" placeholder="Filename (e.g., example.txt)">
+        <textarea id="contentInput" placeholder="New content..."></textarea>
+        <button onclick="editFile()">Save Changes</button>
+        <div id="editStatus" class="status"></div>
+    </div>
+
+    <div class="operation-box">
+        <h2>Delete File</h2>
+        <input type="text" id="deleteFilenameInput" placeholder="Filename (e.g., example.txt)">
+        <button onclick="deleteFile()">Delete</button>
+        <div id="deleteStatus" class="status"></div>
+    </div>
+
+    <script src="../client/mcp-client.js"></script>
+    <script>
+        const client = new MCPClient();
+
+        function showStatus(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${isError ? 'error' : 'success'}`;
+        }
+
+        async function uploadFolder() {
+            const files = document.getElementById('folderInput').files;
+            if (files.length === 0) {
+                showStatus('uploadStatus', "Please select a folder first!", true);
+                return;
+            }
+            try {
+                const result = await client.uploadFolder(files);
+                showStatus('uploadStatus', result.message);
+            } catch (error) {
+                showStatus('uploadStatus', `Error: ${error.message}`, true);
+            }
+        }
+
+        async function editFile() {
+            const filename = document.getElementById('filenameInput').value.trim();
+            const content = document.getElementById('contentInput').value.trim();
+            if (!filename || !content) {
+                showStatus('editStatus', "Both filename and content are required!", true);
+                return;
+            }
+            try {
+                const result = await client.editFile(filename, content);
+                showStatus('editStatus', result.message);
+            } catch (error) {
+                showStatus('editStatus', `Error: ${error.message}`, true);
+            }
+        }
+
+        async function deleteFile() {
+            const filename = document.getElementById('deleteFilenameInput').value.trim();
+            if (!filename) {
+                showStatus('deleteStatus', "Filename is required!", true);
+                return;
+            }
+            try {
+                const result = await client.deleteFile(filename);
+                showStatus('deleteStatus', result.message);
+            } catch (error) {
+                showStatus('deleteStatus', `Error: ${error.message}`, true);
+            }
+        }
+    </script>
+</body>
+</html>
